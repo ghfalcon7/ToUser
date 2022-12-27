@@ -1,0 +1,46 @@
+<html>
+<head>
+    <title>WebSocket Test</title>
+</head>
+<body>
+<h1>WebSocket Test</h1>
+<form>
+    <label htmlFor="userId">User ID:</label><br>
+    <input type="text" id="userId" name="userId"><br>
+    <input type="button" value="Connect" onClick="connect()">
+    <input type="button" value="Disconnect" onClick="disconnect()" id="disconnectButton" disabled>
+</form>
+<div id="connectionStatus">Not connected</div>
+<div id="receivedMessages">Received messages:</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.0/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+<script>
+    var stompClient = null;
+
+    function connect() {
+        var userId = document.getElementById("userId").value;
+        var socket = new SockJS('/websocket');
+        stompClient = Stomp.over(socket);
+        stompClient.connect({userId: userId}, function (frame) {
+            console.log('Connected: ' + frame);
+            document.getElementById("connectionStatus").innerHTML = "Connected as user " + userId;
+            stompClient.subscribe('/topic/messages', function (message) {
+                var messagesDiv = document.getElementById("receivedMessages");
+                var p = document.createElement("p");
+                p.innerHTML = message.body;
+                messagesDiv.appendChild(p);
+            });
+            document.getElementById("disconnectButton").disabled = false;
+        });
+    }
+
+    function disconnect() {
+        if (stompClient != null) {
+            stompClient.disconnect();
+        }
+        document.getElementById("connectionStatus").innerHTML = "Not connected";
+        document.getElementById("disconnectButton").disabled = true;
+    }
+</script>
+</body>
+</html>
